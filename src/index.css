@@ -1,0 +1,35 @@
+body {
+  font-family: Arial, sans-serif;
+  padding: 20px;
+  background-color: #ffffff;
+}
+
+.app {
+  max-width: 700px;
+  margin: auto;
+}
+
+ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+li {
+  padding: 10px;
+  margin-bottom: 8px;
+  border: 1px solid #ccc;
+  cursor: pointer;
+}
+
+.correct {
+  background-color: #c8e6c9;
+}
+
+.wrong {
+  background-color: #ffcdd2;
+}
+
+button {
+  margin: 10px 5px 0 0;
+  padding: 8px 16px;
+}
