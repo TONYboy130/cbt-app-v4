@@ -77,6 +77,7 @@ function App() {
   };
 
   const handleOptionClick = (option) => {
+    if (selectedOption !== null) return;
     const current = shuffledQuestions[currentIndex];
     setSelectedOption(option);
     setShuffledQuestions(prev => {
@@ -126,10 +127,11 @@ function App() {
   }
 
   if (isFinished) {
+    const percentage = Math.round((score / shuffledQuestions.length) * 100);
     return (
       <div className="app">
         <h2>시험 종료!</h2>
-        <p>점수: {score} / {shuffledQuestions.length}</p>
+        <p>점수: {score} / {shuffledQuestions.length} ({percentage}점)</p>
         <p>{score >= 18 ? "✅ 합격입니다!" : "❌ 불합격입니다."}</p>
         <button onClick={handleRetry}>다음 시험</button>
         <h3>복습 모드</h3>
@@ -177,22 +179,16 @@ function App() {
         {currentQuestion.options.map((option, index) => {
           const isCorrect = normalize(option) === normalize(currentQuestion.answer);
           const isSelected = normalize(option) === normalize(currentQuestion.selected);
-          const icon = isFinished && isCorrect && isSelected ? "✅ " : "";
+          const isMatched = isCorrect && isSelected;
+          const icon = isMatched ? "✅ " : "";
           return (
             <li
               key={index}
-              className={isFinished && isSelected ? (isCorrect ? "correct" : "wrong") : ""}
               onClick={() => handleOptionClick(option)}
               style={{
                 backgroundColor: isSelected ? "#fce4ec" : "",
-                fontWeight: isFinished && isCorrect ? "bold" : "normal",
-                color: isFinished
-                  ? isCorrect
-                    ? "green"
-                    : isSelected
-                    ? "red"
-                    : "black"
-                  : "black"
+                fontWeight: isMatched ? "bold" : "normal",
+                color: isSelected ? "black" : "black"
               }}
             >
               {icon}{option}
