@@ -10,39 +10,44 @@ function shuffle(array) {
     currentIndex--;
 
     [array[currentIndex], array[randomIndex]] = [
-      array[randomIndex], array[currentIndex],
+      array[randomIndex],
+      array[currentIndex],
     ];
   }
   return array;
 }
 
 function normalize(text) {
-  if (!text || typeof text !== 'string') return '';
-  return text.replace(/[①-④]/g, c => ({ '①': '1', '②': '2', '③': '3', '④': '4' }[c] || c)).trim();
+  if (!text || typeof text !== "string") return "";
+  return text
+    .replace(/[①-④]/g, (c) => ({ "①": "1", "②": "2", "③": "3", "④": "4" }[c] || c))
+    .trim();
 }
 
 function App() {
   const [remainingTime, setRemainingTime] = useState(2700);
-  const [authenticated, setAuthenticated] = useState(() => localStorage.getItem("authenticated") === "true");
+  const [authenticated, setAuthenticated] = useState(
+    () => localStorage.getItem("authenticated") === "true"
+  );
   const [shuffledQuestions, setShuffledQuestions] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showExplanation, setShowExplanation] = useState(false);
   const [score, setScore] = useState(0);
   const [isFinished, setIsFinished] = useState(false);
 
-const loadQuestions = () => {
--  fetch(process.env.PUBLIC_URL + "/cbt_questions_2900_prefixed.json")
-+  fetch(process.env.PUBLIC_URL + "/cbt_questions_213.json")
-     .then(res => res.json())
-     .then(data => {
--      const shuffled = shuffle(data).slice(0, 25);
-+      const shuffled = shuffle(data).slice(0, 25); // 25문제씩 랜덤 추출
-       setShuffledQuestions(shuffled);
-       setRemainingTime(2700);
-       setCurrentIndex(0);
-       setScore(0);
-     });
-};
+  const loadQuestions = () => {
+    fetch(process.env.PUBLIC_URL + "/cbt_questions_213.json")
+      .then((res) => res.json())
+      .then((data) => {
+        const shuffled = shuffle(data).slice(0, 25); // 25문제씩 랜덤 추출
+        setShuffledQuestions(shuffled);
+        setRemainingTime(2700);
+        setCurrentIndex(0);
+        setScore(0);
+        setShowExplanation(false);
+        setIsFinished(false);
+      });
+  };
 
   useEffect(() => {
     if (authenticated) loadQuestions();
@@ -51,7 +56,7 @@ const loadQuestions = () => {
   useEffect(() => {
     if (!authenticated || isFinished) return;
     const interval = setInterval(() => {
-      setRemainingTime(prev => {
+      setRemainingTime((prev) => {
         if (prev <= 1) {
           clearInterval(interval);
           setIsFinished(true);
@@ -75,7 +80,7 @@ const loadQuestions = () => {
   };
 
   const handleOptionClick = (option) => {
-    setShuffledQuestions(prev => {
+    setShuffledQuestions((prev) => {
       const updated = [...prev];
       updated[currentIndex].selected = option;
       return updated;
@@ -85,14 +90,11 @@ const loadQuestions = () => {
   const handleNext = () => {
     setShowExplanation(false);
     if (currentIndex + 1 < shuffledQuestions.length) {
-      setCurrentIndex(prev => prev + 1);
+      setCurrentIndex((prev) => prev + 1);
     } else {
-      let calculatedScore = 0;
-      shuffledQuestions.forEach(q => {
-        if (normalize(q.selected) === normalize(q.answer)) {
-          calculatedScore++;
-        }
-      });
+      const calculatedScore = shuffledQuestions.reduce((sum, q) => {
+        return sum + (normalize(q.selected) === normalize(q.answer) ? 1 : 0);
+      }, 0);
       setScore(calculatedScore);
       setIsFinished(true);
     }
@@ -101,7 +103,7 @@ const loadQuestions = () => {
   const handlePrev = () => {
     if (currentIndex > 0) {
       setShowExplanation(false);
-      setCurrentIndex(prev => prev - 1);
+      setCurrentIndex((prev) => prev - 1);
     }
   };
 
@@ -121,58 +123,90 @@ const loadQuestions = () => {
     );
   }
 
-  if (isFinished) {
-    const percentage = Math.round((score / shuffledQuestions.length) * 100);
-    return (
-      <div className="app">
-        <h2>시험 종료!</h2>
-        <p>점수: {score} / {shuffledQuestions.length} ({percentage}점)</p>
-        <p>{score >= 18 ? "✅ 합격입니다!" : "❌ 불합격입니다."}</p>
-        <button onClick={handleRetry}>다음 시험</button>
-        <h3>복습 모드</h3>
-        {shuffledQuestions.map((q, i) => (
+
+if (isFinished) {
+  const percentage = Math.round((score / shuffledQuestions.length) * 100);
+  return (
+    <div className="app">
+      <h2>시험 종료!</h2>
+      <p>
+        점수: {score} / {shuffledQuestions.length} ({percentage}점)
+      </p>
+      <p>{score >= 18 ? "✅ 합격입니다!" : "❌ 불합격입니다."}</p>
+      <button onClick={handleRetry}>다음 시험</button>
+      <h3>복습 모드</h3>
+      {shuffledQuestions.map((q, i) => {
+        const normalizedSelected = normalize(q.selected);
+        const normalizedAnswer = normalize(q.answer);
+        return (
           <div key={i} className="review">
-            <p><strong>{i + 1}. {q.question}</strong></p>
+            <p>
+              <strong>
+                {i + 1}. {q.question}
+              </strong>
+            </p>
             {q.options.map((opt, idx) => {
-              const isCorrect = normalize(opt) === normalize(q.answer);
-              const isSelected = normalize(opt) === normalize(q.selected);
-              const icon = isCorrect && isSelected ? "✅ " : "";
+              const normalizedOpt = normalize(opt);
+              const isSelected = normalizedOpt === normalizedSelected;
+              const isCorrect = normalizedOpt === normalizedAnswer;
               return (
                 <p
                   key={idx}
                   style={{
+                    backgroundColor: isSelected ? "#fce4ec" : "transparent",
+                    fontWeight: "normal",
                     color: isCorrect ? "green" : isSelected ? "red" : "black",
-                    fontWeight: isCorrect || isSelected ? "bold" : "normal",
-                    backgroundColor: isSelected ? "#fce4ec" : "transparent"
                   }}
                 >
-                  {icon}{opt}
+                  {isCorrect && (
+                    <strong>
+                      ✅ {opt}
+                    </strong>
+                  )}
+                  {isSelected && !isCorrect && (
+                    <strong>
+                      ❌ {opt}
+                    </strong>
+                  )}
+                  {!isSelected && !isCorrect && opt}
                 </p>
               );
             })}
-            <p><strong>정답:</strong> {q.answer}</p>
-            <p><strong>해설:</strong> {q.explanation}</p>
+            <p>
+              <strong>정답: {q.answer}</strong>
+            </p>
+            <p>
+              <strong>해설: {q.explanation}</strong>
+            </p>
             <hr />
           </div>
-        ))}
-      </div>
-    );
-  }
+        );
+      })}
+    </div>
+  );
+}
+
 
   const currentQuestion = shuffledQuestions[currentIndex];
-
   if (!currentQuestion) {
     return <div className="app">문제를 불러오는 중입니다...</div>;
   }
-
   const currentSelection = normalize(currentQuestion.selected);
   const correctAnswer = normalize(currentQuestion.answer);
 
   return (
     <div className="app">
-      <h3>⏰ 남은 시간: {Math.floor(remainingTime / 60).toString().padStart(2, "0")}:{(remainingTime % 60).toString().padStart(2, "0")}</h3>
-      <h2>문제 {currentIndex + 1} / {shuffledQuestions.length}</h2>
-      <p><strong>{currentQuestion.question}</strong></p>
+      <h3>
+        ⏰ 남은 시간:{" "}
+        {String(Math.floor(remainingTime / 60)).padStart(2, "0")}:
+        {String(remainingTime % 60).padStart(2, "0")}
+      </h3>
+      <h2>
+        문제 {currentIndex + 1} / {shuffledQuestions.length}
+      </h2>
+      <p>
+        <strong>{currentQuestion.question}</strong>
+      </p>
       <ul>
         {currentQuestion.options.map((option, index) => {
           const normalized = normalize(option);
@@ -184,7 +218,7 @@ const loadQuestions = () => {
               style={{
                 backgroundColor: isSelected ? "#fce4ec" : "",
                 fontWeight: isSelected ? "bold" : "normal",
-                color: "black"
+                color: "black",
               }}
             >
               {option}
@@ -197,11 +231,15 @@ const loadQuestions = () => {
       </button>
       {showExplanation && (
         <div className="explanation">
-          <p><strong>해설:</strong> {currentQuestion.explanation}</p>
+          <p>
+            <strong>해설:</strong> {currentQuestion.explanation}
+          </p>
         </div>
       )}
       <div style={{ marginTop: "10px" }}>
-        <button onClick={handlePrev} disabled={currentIndex === 0}>이전 문제</button>
+        <button onClick={handlePrev} disabled={currentIndex === 0}>
+          이전 문제
+        </button>
         <button onClick={handleNext}>다음 문제</button>
       </div>
     </div>
