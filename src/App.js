@@ -26,25 +26,23 @@ function App() {
   const [authenticated, setAuthenticated] = useState(() => localStorage.getItem("authenticated") === "true");
   const [shuffledQuestions, setShuffledQuestions] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [selectedOption, setSelectedOption] = useState(null);
   const [showExplanation, setShowExplanation] = useState(false);
   const [score, setScore] = useState(0);
   const [isFinished, setIsFinished] = useState(false);
 
-  const loadQuestions = () => {
-    fetch(process.env.PUBLIC_URL + "/cbt_questions_2900_prefixed.json")
-      .then(res => res.json())
-      .then(data => {
-        const shuffled = shuffle(data).slice(0, 25);
-        setShuffledQuestions(shuffled);
-        setRemainingTime(2700);
-        setCurrentIndex(0);
-        setScore(0);
-        setSelectedOption(null);
-        setIsFinished(false);
-        setShowExplanation(false);
-      });
-  };
+const loadQuestions = () => {
+-  fetch(process.env.PUBLIC_URL + "/cbt_questions_2900_prefixed.json")
++  fetch(process.env.PUBLIC_URL + "/cbt_questions_213.json")
+     .then(res => res.json())
+     .then(data => {
+-      const shuffled = shuffle(data).slice(0, 25);
++      const shuffled = shuffle(data).slice(0, 25); // 25문제씩 랜덤 추출
+       setShuffledQuestions(shuffled);
+       setRemainingTime(2700);
+       setCurrentIndex(0);
+       setScore(0);
+     });
+};
 
   useEffect(() => {
     if (authenticated) loadQuestions();
@@ -77,34 +75,31 @@ function App() {
   };
 
   const handleOptionClick = (option) => {
-    if (selectedOption !== null) return;
-    const current = shuffledQuestions[currentIndex];
-    setSelectedOption(option);
     setShuffledQuestions(prev => {
       const updated = [...prev];
       updated[currentIndex].selected = option;
       return updated;
     });
-    const selected = normalize(option);
-    const correct = normalize(current.answer);
-    if (selected === correct) {
-      setScore(prev => prev + 1);
-    }
   };
 
   const handleNext = () => {
     setShowExplanation(false);
-    setSelectedOption(null);
     if (currentIndex + 1 < shuffledQuestions.length) {
       setCurrentIndex(prev => prev + 1);
     } else {
+      let calculatedScore = 0;
+      shuffledQuestions.forEach(q => {
+        if (normalize(q.selected) === normalize(q.answer)) {
+          calculatedScore++;
+        }
+      });
+      setScore(calculatedScore);
       setIsFinished(true);
     }
   };
 
   const handlePrev = () => {
     if (currentIndex > 0) {
-      setSelectedOption(null);
       setShowExplanation(false);
       setCurrentIndex(prev => prev - 1);
     }
@@ -170,6 +165,9 @@ function App() {
     return <div className="app">문제를 불러오는 중입니다...</div>;
   }
 
+  const currentSelection = normalize(currentQuestion.selected);
+  const correctAnswer = normalize(currentQuestion.answer);
+
   return (
     <div className="app">
       <h3>⏰ 남은 시간: {Math.floor(remainingTime / 60).toString().padStart(2, "0")}:{(remainingTime % 60).toString().padStart(2, "0")}</h3>
@@ -177,21 +175,19 @@ function App() {
       <p><strong>{currentQuestion.question}</strong></p>
       <ul>
         {currentQuestion.options.map((option, index) => {
-          const isCorrect = normalize(option) === normalize(currentQuestion.answer);
-          const isSelected = normalize(option) === normalize(currentQuestion.selected);
-          const isMatched = isCorrect && isSelected;
-          const icon = isMatched ? "✅ " : "";
+          const normalized = normalize(option);
+          const isSelected = normalized === currentSelection;
           return (
             <li
               key={index}
               onClick={() => handleOptionClick(option)}
               style={{
                 backgroundColor: isSelected ? "#fce4ec" : "",
-                fontWeight: isMatched ? "bold" : "normal",
-                color: isSelected ? "black" : "black"
+                fontWeight: isSelected ? "bold" : "normal",
+                color: "black"
               }}
             >
-              {icon}{option}
+              {option}
             </li>
           );
         })}
