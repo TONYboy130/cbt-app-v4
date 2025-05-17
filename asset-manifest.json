@@ -1,13 +1,13 @@
 {
   "files": {
     "main.css": "/cbt-app-v4/static/css/main.c0f3db94.css",
-    "main.js": "/cbt-app-v4/static/js/main.c611a798.js",
+    "main.js": "/cbt-app-v4/static/js/main.aa97a70f.js",
     "index.html": "/cbt-app-v4/index.html",
     "main.c0f3db94.css.map": "/cbt-app-v4/static/css/main.c0f3db94.css.map",
-    "main.c611a798.js.map": "/cbt-app-v4/static/js/main.c611a798.js.map"
+    "main.aa97a70f.js.map": "/cbt-app-v4/static/js/main.aa97a70f.js.map"
   },
   "entrypoints": [
     "static/css/main.c0f3db94.css",
-    "static/js/main.c611a798.js"
+    "static/js/main.aa97a70f.js"
   ]
 }
